@@ -89,12 +89,97 @@ fn print_game(
 
     if lost {
         println!("\nGame Over!");
+        println!("Final Score: {}", score)
     }
 
     Ok(())
 }
 
-fn do_game_step(user_move: &Move, field: &mut Vec<usize>) -> Result<(), &'static str> {
+fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str> {
+    match umove {
+        &Move::Up => {
+            for cidx in 0..4 {
+                for ridx in 0..4 {
+                    for next in (ridx + 1)..4 {
+                        if field[index(cidx, next)] != 0 {
+                            if field[index(cidx, ridx)] == 0 {
+                                field[index(cidx, ridx)] += field[index(cidx, next)];
+                                field[index(cidx, next)] = 0;
+                            } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
+                                field[index(cidx, ridx)] += field[index(cidx, next)];
+                                field[index(cidx, next)] = 0;
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &Move::Left => {
+            for ridx in 0..4 {
+                for cidx in 0..4 {
+                    for next in (cidx + 1)..4 {
+                        if field[index(next, ridx)] != 0 {
+                            if field[index(cidx, ridx)] == 0 {
+                                field[index(cidx, ridx)] += field[index(next, ridx)];
+                                field[index(next, ridx)] = 0;
+                            } else if field[index(cidx, ridx)] == field[index(next, ridx)] {
+                                field[index(cidx, ridx)] += field[index(next, ridx)];
+                                field[index(next, ridx)] = 0;
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &Move::Down => {
+            for cidx in 0..4 {
+                for ridx in (0..4).rev() {
+                    for next in (0..ridx).rev() {
+                        if field[index(cidx, next)] != 0 {
+                            if field[index(cidx, ridx)] == 0 {
+                                field[index(cidx, ridx)] += field[index(cidx, next)];
+                                field[index(cidx, next)] = 0;
+                            } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
+                                field[index(cidx, ridx)] += field[index(cidx, next)];
+                                field[index(cidx, next)] = 0;
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        &Move::Right => {
+            for ridx in 0..4 {
+                for cidx in (0..4).rev() {
+                    for next in (0..cidx).rev() {
+                        if field[index(next, ridx)] != 0 {
+                            if field[index(cidx, ridx)] == 0 {
+                                field[index(cidx, ridx)] += field[index(next, ridx)];
+                                field[index(next, ridx)] = 0;
+                            } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
+                                field[index(cidx, ridx)] += field[index(next, ridx)];
+                                field[index(next, ridx)] = 0;
+                                break;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        _ => return Err("Invalid input. "),
+    }
+
     Ok(())
 }
 
@@ -171,8 +256,7 @@ fn gen_rand_cell(field: &mut Vec<usize>) -> Result<(), &'static str> {
 
 fn main() {
     let mut field = vec![0; 4 * 4];
-    // let mut score = 0;
-    let score = 0;
+    let mut score = 0;
     let mut test = vec![0; 4 * 4];
     let verbose = false;
     let mut lost = false;
@@ -215,14 +299,22 @@ fn main() {
             match get_user_move() {
                 Ok(umove) => match umove {
                     Move::Quit => {
-                        println!("\n Game Quit\nFinal Score: {}", score);
+                        println!("\nGame Quit");
+                        println!("Final Score: {}", score);
                         lost = true;
                         break 'gameloop;
                     }
-                    _ => match do_game_step(&umove, &mut field) {
-                        Ok(()) => {}
-                        Err(msg) => panic!("{}", msg),
-                    },
+                    _ => {
+                        match print_game(&mut field, &mut score, verbose, lost) {
+                            Ok(()) => {}
+                            Err(msg) => panic!("{}", msg),
+                        }
+
+                        match do_game_step(&umove, &mut field) {
+                            Ok(()) => {}
+                            Err(msg) => panic!("{}", msg),
+                        }
+                    }
                 },
                 Err(msg) => panic!("{}", msg),
             }
