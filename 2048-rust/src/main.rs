@@ -3,7 +3,6 @@ use std::{io, ops::AddAssign, thread, time::Duration};
 
 // #[derive(Debug)]
 enum Move {
-    Invalid,
     Up,
     Down,
     Left,
@@ -196,7 +195,7 @@ fn do_game_step(
 }
 
 fn get_user_move() -> Result<Move, &'static str> {
-    let mut umove = Move::Invalid;
+    let umove;
 
     'inputloop: loop {
         let mut uinput = String::new();
@@ -269,7 +268,6 @@ fn gen_rand_cell(field: &mut Vec<usize>) -> Result<(), &'static str> {
 fn main() {
     let mut field = vec![0; 4 * 4];
     let mut score = 0;
-    let mut test = vec![0; 4 * 4];
     let verbose = false;
 
     'gameloop: loop {
@@ -279,7 +277,7 @@ fn main() {
         }
 
         for move_type in [Move::Up, Move::Left, Move::Down, Move::Right] {
-            test = field.clone();
+            let mut test = field.clone();
 
             match do_game_step(&move_type, &mut test, &mut score) {
                 Ok(()) => {}
@@ -308,7 +306,7 @@ fn main() {
             Err(msg) => panic!("{}", msg),
         }
 
-        test = field.clone();
+        let test = field.clone();
 
         while test == field {
             match get_user_move() {
