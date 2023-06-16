@@ -271,36 +271,39 @@ fn main() {
     let mut score = 0;
     let mut test = vec![0; 4 * 4];
     let verbose = false;
-    let mut lost = false;
 
     'gameloop: loop {
-        test = field.clone();
-
         match gen_rand_cell(&mut field) {
             Ok(()) => {}
             Err(msg) => panic!("{}", msg),
         }
 
-        'next_move_loop: for move_type in [Move::Up, Move::Left, Move::Down, Move::Right] {
+        for move_type in [Move::Up, Move::Left, Move::Down, Move::Right] {
+            test = field.clone();
+
             match do_game_step(&move_type, &mut test, &mut score) {
                 Ok(()) => {}
                 Err(msg) => panic!("{}", msg),
             }
 
             if test != field {
-                break 'next_move_loop;
+                break;
             }
 
             match move_type {
                 Move::Right => {
-                    lost = true;
+                    match print_game(&mut field, &score, verbose, true) {
+                        Ok(()) => {}
+                        Err(msg) => panic!("{}", msg),
+                    }
+
                     break 'gameloop;
                 }
                 _ => {}
             }
         }
 
-        match print_game(&mut field, &score, verbose, lost) {
+        match print_game(&mut field, &score, verbose, false) {
             Ok(()) => {}
             Err(msg) => panic!("{}", msg),
         }
@@ -313,11 +316,16 @@ fn main() {
                     Move::Quit => {
                         println!("\nGame Quit");
                         println!("Final Score: {}", score);
-                        lost = true;
+
+                        match print_game(&mut field, &score, verbose, true) {
+                            Ok(()) => {}
+                            Err(msg) => panic!("{}", msg),
+                        }
+
                         break 'gameloop;
                     }
                     _ => {
-                        match print_game(&mut field, &score, verbose, lost) {
+                        match print_game(&mut field, &score, verbose, false) {
                             Ok(()) => {}
                             Err(msg) => panic!("{}", msg),
                         }
