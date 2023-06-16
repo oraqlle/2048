@@ -21,13 +21,12 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
         .and_then(|x| Some(x.to_string()))
         .and_then(|x| Some(x.len() + 2));
 
-    let spacing = String::from("-").repeat(width.unwrap_or(3));
-    let divider = format!("+{0}+{0}+{0}+{0}+", spacing);
+    let spacing = String::from("─").repeat(width.unwrap_or(3));
 
-    println!("{}", divider);
+    println!("┌{0}┬{0}┬{0}┬{0}┐", spacing);
 
-    for ridx in 0..4 {
-        print!("|");
+    for ridx in 0..3 {
+        print!("│");
 
         for cidx in 0..4 {
             let idx = index(cidx, ridx);
@@ -42,7 +41,7 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                     let right_ws = String::from(" ").repeat(right_ws_size);
                     let left_ws = String::from(" ").repeat(left_ws_size);
 
-                    print!(" {}{}{} |", left_ws, cell, right_ws);
+                    print!(" {}{}{} │", left_ws, cell, right_ws);
                 }
                 None => {
                     let err: &'static str = "Index out of range. ";
@@ -50,9 +49,33 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                 }
             }
         }
-
-        println!("\n{}", divider);
+        println!("\n├{0}┼{0}┼{0}┼{0}┤", spacing);
     }
+
+    print!("│");
+
+    for cidx in 0..4 {
+        let idx = index(cidx, 3);
+
+        match field.get(idx) {
+            Some(cell) => {
+                let size = cell.to_string().len();
+                let ws_size = width.unwrap_or(3) - size - 2;
+                let right_ws_size = ws_size / 2;
+                let left_ws_size = ws_size - right_ws_size;
+
+                let right_ws = String::from(" ").repeat(right_ws_size);
+                let left_ws = String::from(" ").repeat(left_ws_size);
+
+                print!(" {}{}{} │", left_ws, cell, right_ws);
+            }
+            None => {
+                let err: &'static str = "Index out of range. ";
+                return Err(err);
+            }
+        }
+    }
+    println!("\n└{0}┴{0}┴{0}┴{0}┘", spacing);
 
     Ok(())
 }
