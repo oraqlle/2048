@@ -175,7 +175,7 @@ fn do_game_step(
                             if field[index(cidx, ridx)] == 0 {
                                 field[index(cidx, ridx)] += field[index(next, ridx)];
                                 field[index(next, ridx)] = 0;
-                            } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
+                            } else if field[index(cidx, ridx)] == field[index(next, ridx)] {
                                 field[index(cidx, ridx)] += field[index(next, ridx)];
                                 field[index(next, ridx)] = 0;
 
