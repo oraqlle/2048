@@ -1,5 +1,5 @@
 use rand::random;
-use std::{io, thread, time::Duration};
+use std::{io, ops::AddAssign, thread, time::Duration};
 
 // #[derive(Debug)]
 enum Move {
@@ -60,7 +60,7 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
 
 fn print_game(
     field: &mut Vec<usize>,
-    score: &mut usize,
+    score: &usize,
     verbose: bool,
     lost: bool,
 ) -> Result<(), &'static str> {
@@ -95,7 +95,11 @@ fn print_game(
     Ok(())
 }
 
-fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str> {
+fn do_game_step(
+    umove: &Move,
+    field: &mut Vec<usize>,
+    score: &mut usize,
+) -> Result<(), &'static str> {
     match umove {
         &Move::Up => {
             for cidx in 0..4 {
@@ -108,6 +112,8 @@ fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str
                             } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
                                 field[index(cidx, ridx)] += field[index(cidx, next)];
                                 field[index(cidx, next)] = 0;
+
+                                score.add_assign(field[index(cidx, ridx)]);
                                 break;
                             } else {
                                 break;
@@ -128,6 +134,8 @@ fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str
                             } else if field[index(cidx, ridx)] == field[index(next, ridx)] {
                                 field[index(cidx, ridx)] += field[index(next, ridx)];
                                 field[index(next, ridx)] = 0;
+
+                                score.add_assign(field[index(cidx, ridx)]);
                                 break;
                             } else {
                                 break;
@@ -148,6 +156,8 @@ fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str
                             } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
                                 field[index(cidx, ridx)] += field[index(cidx, next)];
                                 field[index(cidx, next)] = 0;
+
+                                score.add_assign(field[index(cidx, ridx)]);
                                 break;
                             } else {
                                 break;
@@ -168,6 +178,8 @@ fn do_game_step(umove: &Move, field: &mut Vec<usize>) -> Result<(), &'static str
                             } else if field[index(cidx, ridx)] == field[index(cidx, next)] {
                                 field[index(cidx, ridx)] += field[index(next, ridx)];
                                 field[index(next, ridx)] = 0;
+
+                                score.add_assign(field[index(cidx, ridx)]);
                                 break;
                             } else {
                                 break;
@@ -270,7 +282,7 @@ fn main() {
         }
 
         'next_move_loop: for move_type in [Move::Up, Move::Left, Move::Down, Move::Right] {
-            match do_game_step(&move_type, &mut test) {
+            match do_game_step(&move_type, &mut test, &mut score) {
                 Ok(()) => {}
                 Err(msg) => panic!("{}", msg),
             }
@@ -288,7 +300,7 @@ fn main() {
             }
         }
 
-        match print_game(&mut field, &mut score, verbose, lost) {
+        match print_game(&mut field, &score, verbose, lost) {
             Ok(()) => {}
             Err(msg) => panic!("{}", msg),
         }
@@ -305,12 +317,12 @@ fn main() {
                         break 'gameloop;
                     }
                     _ => {
-                        match print_game(&mut field, &mut score, verbose, lost) {
+                        match print_game(&mut field, &score, verbose, lost) {
                             Ok(()) => {}
                             Err(msg) => panic!("{}", msg),
                         }
 
-                        match do_game_step(&umove, &mut field) {
+                        match do_game_step(&umove, &mut field, &mut score) {
                             Ok(()) => {}
                             Err(msg) => panic!("{}", msg),
                         }
