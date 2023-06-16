@@ -1,10 +1,14 @@
-use std::{thread, time::Duration};
+use rand::random;
+use std::{io, thread, time::Duration};
 
+// #[derive(Debug)]
 enum Move {
+    Invalid,
     Up,
     Down,
     Left,
     Right,
+    Quit,
 }
 
 fn index(x: usize, y: usize) -> usize {
@@ -42,7 +46,8 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                     print!(" {}{}{} |", left_ws, cell, right_ws);
                 }
                 None => {
-                    panic!("Index out of range: {}", idx);
+                    let err: &'static str = "Index out of range. ";
+                    return Err(err);
                 }
             }
         }
@@ -53,49 +58,174 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
     Ok(())
 }
 
+fn print_game(
+    field: &mut Vec<usize>,
+    score: &mut usize,
+    verbose: bool,
+    lost: bool,
+) -> Result<(), &'static str> {
+    match clearscreen::clear() {
+        Ok(()) => {}
+        Err(_) => return Err("Failed to clear screen. "),
+    }
+
+    println!("2048");
+
+    if verbose {
+        println!("---------------------");
+        println!("\nControls:");
+        println!("W - Shift cells up");
+        println!("A - Shift cells left");
+        println!("S - Shift cells down");
+        println!("D - Shift cells right");
+        println!("Q - Quit\n");
+        println!("Score: {}\n", score);
+    } else {
+        println!("----");
+        println!("Score: {}\n", score);
+    }
+
+    print_board(field)?;
+
+    if lost {
+        println!("\nGame Over!");
+    }
+
+    Ok(())
+}
+
+fn do_game_step(user_move: &Move, field: &mut Vec<usize>) -> Result<(), &'static str> {
+    Ok(())
+}
+
+fn get_user_move() -> Result<Move, &'static str> {
+    let mut umove = Move::Invalid;
+
+    'inputloop: loop {
+        let mut uinput = String::new();
+
+        match io::stdin().read_line(&mut uinput) {
+            Err(_) => {
+                let msg: &'static str = "Failed to get user input. ";
+                return Err(msg);
+            }
+            Ok(_) => match uinput.chars().nth(0) {
+                Some('w') => {
+                    umove = Move::Up;
+                    break 'inputloop;
+                }
+                Some('a') => {
+                    umove = Move::Left;
+                    break 'inputloop;
+                }
+                Some('s') => {
+                    umove = Move::Down;
+                    break 'inputloop;
+                }
+                Some('d') => {
+                    umove = Move::Right;
+                    break 'inputloop;
+                }
+                Some('q') => {
+                    umove = Move::Quit;
+                    break 'inputloop;
+                }
+                Some(other) => {
+                    println!("Invalid input: {}. Valid inputs are w-a-s-d. ", other);
+                    thread::sleep(Duration::from_secs(1));
+                }
+                _ => {
+                    panic!("Unrecognized error!");
+                }
+            },
+        }
+    }
+
+    Ok(umove)
+}
+
+fn gen_rand_cell(field: &mut Vec<usize>) -> Result<(), &'static str> {
+    'randloop: loop {
+        let rnd = random::<usize>();
+        let idx = index((rnd / 4) % 4, rnd % 4);
+
+        match field.get_mut(idx) {
+            None => {
+                return Err("Index out of range. ");
+            }
+            Some(cell) => {
+                if *cell == 0 {
+                    if rnd % 10 == 0 {
+                        *cell = 4;
+                    } else {
+                        *cell = 2;
+                    }
+                    break 'randloop;
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn main() {
     let mut field = vec![0; 4 * 4];
+    // let mut score = 0;
+    let score = 0;
+    let mut test = vec![0; 4 * 4];
+    let verbose = false;
+    let mut lost = false;
 
-    match print_board(&mut field) {
-        Ok(()) => {}
-        Err(msg) => {
-            panic!("{}", msg);
+    'gameloop: loop {
+        test = field.clone();
+
+        match gen_rand_cell(&mut field) {
+            Ok(()) => {}
+            Err(msg) => panic!("{}", msg),
         }
-    }
 
-    thread::sleep(Duration::from_secs(5));
+        'next_move_loop: for move_type in [Move::Up, Move::Left, Move::Down, Move::Right] {
+            match do_game_step(&move_type, &mut test) {
+                Ok(()) => {}
+                Err(msg) => panic!("{}", msg),
+            }
 
-    match clearscreen::clear() {
-        Ok(()) => {}
-        Err(msg) => {
-            panic!("{}", msg);
+            if test != field {
+                break 'next_move_loop;
+            }
+
+            match move_type {
+                Move::Right => {
+                    lost = true;
+                    break 'gameloop;
+                }
+                _ => {}
+            }
         }
-    }
 
-    field[2] = 2;
-
-    match print_board(&mut field) {
-        Ok(()) => {}
-        Err(msg) => {
-            panic!("{}", msg);
+        match print_game(&mut field, &mut score, verbose, lost) {
+            Ok(()) => {}
+            Err(msg) => panic!("{}", msg),
         }
-    }
 
-    thread::sleep(Duration::from_secs(5));
+        test = field.clone();
 
-    match clearscreen::clear() {
-        Ok(()) => {}
-        Err(msg) => {
-            panic!("{}", msg);
-        }
-    }
-
-    field[7] = 2222;
-
-    match print_board(&mut field) {
-        Ok(()) => {}
-        Err(msg) => {
-            panic!("{}", msg);
+        while test == field {
+            match get_user_move() {
+                Ok(umove) => match umove {
+                    Move::Quit => {
+                        println!("\n Game Quit\nFinal Score: {}", score);
+                        lost = true;
+                        break 'gameloop;
+                    }
+                    _ => match do_game_step(&umove, &mut field) {
+                        Ok(()) => {}
+                        Err(msg) => panic!("{}", msg),
+                    },
+                },
+                Err(msg) => panic!("{}", msg),
+            }
         }
     }
 }
