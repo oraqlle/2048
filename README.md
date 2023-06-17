@@ -10,9 +10,19 @@ The famous 2048 game implemented in Rust, Elixir and Zig.
   - [Elixir](#elixir)
   - [Zig](#zig)
 
+To download, clone the repo locally.
+
+```sh
+git clone https://github.com/oraqlle/2048.git
+cd 2048
+```
+
 ## Rust
 
-~
+```sh
+cd 2048-rust
+cargo run --release
+```
 
 ## Elixir
 
