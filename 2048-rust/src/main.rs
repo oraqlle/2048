@@ -41,7 +41,11 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                     let right_ws = String::from(" ").repeat(right_ws_size);
                     let left_ws = String::from(" ").repeat(left_ws_size);
 
-                    print!(" {}{}{} │", left_ws, cell, right_ws);
+                    if cell == &0 {
+                        print!(" {} {} │", left_ws, right_ws);
+                    } else {
+                        print!(" {}{}{} │", left_ws, cell, right_ws);
+                    }
                 }
                 None => {
                     let err: &'static str = "Index out of range. ";
@@ -67,7 +71,11 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                 let right_ws = String::from(" ").repeat(right_ws_size);
                 let left_ws = String::from(" ").repeat(left_ws_size);
 
-                print!(" {}{}{} │", left_ws, cell, right_ws);
+                if cell == &0 {
+                    print!(" {} {} │", left_ws, right_ws);
+                } else {
+                    print!(" {}{}{} │", left_ws, cell, right_ws);
+                }
             }
             None => {
                 let err: &'static str = "Index out of range. ";
