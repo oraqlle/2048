@@ -1,11 +1,11 @@
 use rand::random;
 use std::{io, ops::AddAssign, thread, time::Duration};
 
-// #[derive(Debug)]
+#[derive(Debug)]
 enum Move {
     Up,
-    Down,
     Left,
+    Down,
     Right,
     Quit,
 }
@@ -258,7 +258,7 @@ fn get_user_move() -> Result<Move, &'static str> {
                     break 'inputloop;
                 }
                 Some(other) => {
-                    println!("Invalid input: {}. Valid inputs are w-a-s-d. ", other);
+                    println!("Invalid input: {}. Valid inputs are w-a-s-d and q. ", other);
                     thread::sleep(Duration::from_secs(1));
                 }
                 _ => {
