@@ -110,10 +110,36 @@ defmodule Twenty48 do
     IO.puts("┌#{spacing}┬#{spacing}┬#{spacing}┬#{spacing}┐")
 
     Enum.each(0..(@size - 2), fn ridx ->
-      row = "│"
+      row =
+        Enum.reduce(@range, "", fn cidx, row ->
+          cell = field[{ridx, cidx}]
 
-      Enum.each(@range, fn cidx ->
-        cell = field[{ridx, cidx}]
+          size =
+            cell
+            |> to_string
+            |> String.length()
+
+          ws_size = width - size - 2
+          right_ws_size = div(ws_size, 2)
+          left_ws_size = ws_size - right_ws_size
+
+          right_ws = String.duplicate(" ", right_ws_size)
+          left_ws = String.duplicate(" ", left_ws_size)
+
+          if cell == 0 do
+            row = row <> " #{left_ws} #{right_ws} │"
+          else
+            row = row <> " #{left_ws}#{cell}#{right_ws} │"
+          end
+        end)
+
+      IO.puts("│" <> row)
+      IO.puts("├#{spacing}┼#{spacing}┼#{spacing}┼#{spacing}┤")
+    end)
+
+    row =
+      Enum.reduce(@range, "", fn cidx, row ->
+        cell = field[{@size - 1, cidx}]
 
         size =
           cell
@@ -128,41 +154,13 @@ defmodule Twenty48 do
         left_ws = String.duplicate(" ", left_ws_size)
 
         if cell == 0 do
-          row = row <> " #{left_ws} #{right_ws} ^"
+          row = row <> " #{left_ws} #{right_ws} │"
         else
-          row = row <> " #{left_ws}#{cell}#{right_ws} ^"
+          row = row <> " #{left_ws}#{cell}#{right_ws} │"
         end
       end)
 
-      IO.puts(row)
-      IO.puts("├#{spacing}┼#{spacing}┼#{spacing}┼#{spacing}┤")
-    end)
-
-    row = "│"
-
-    Enum.each(@range, fn cidx ->
-      cell = field[{@size - 1, cidx}]
-
-      size =
-        cell
-        |> to_string
-        |> String.length()
-
-      ws_size = width - size - 2
-      right_ws_size = div(ws_size, 2)
-      left_ws_size = ws_size - right_ws_size
-
-      right_ws = String.duplicate(" ", right_ws_size)
-      left_ws = String.duplicate(" ", left_ws_size)
-
-      if cell == 0 do
-        row = row <> " #{left_ws} #{right_ws} ^"
-      else
-        row = row <> " #{left_ws}#{cell}#{right_ws} ^"
-      end
-    end)
-
-    IO.puts(row)
+    IO.puts("│" <> row)
     IO.puts("└#{spacing}┴#{spacing}┴#{spacing}┴#{spacing}┘")
   end
 
