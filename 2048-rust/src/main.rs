@@ -48,7 +48,7 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                     }
                 }
                 None => {
-                    let err: &'static str = "Index out of range. ";
+                    let err: &'static str = "Index out of range.";
                     return Err(err);
                 }
             }
@@ -78,7 +78,7 @@ fn print_board(field: &mut Vec<usize>) -> Result<(), &'static str> {
                 }
             }
             None => {
-                let err: &'static str = "Index out of range. ";
+                let err: &'static str = "Index out of range.";
                 return Err(err);
             }
         }
@@ -96,7 +96,7 @@ fn print_game(
 ) -> Result<(), &'static str> {
     match clearscreen::clear() {
         Ok(()) => {}
-        Err(_) => return Err("Failed to clear screen. "),
+        Err(_) => return Err("Failed to clear screen."),
     }
 
     println!("2048");
@@ -219,7 +219,7 @@ fn do_game_step(
                 }
             }
         }
-        _ => return Err("Invalid input. "),
+        _ => return Err("Invalid input."),
     }
 
     Ok(())
@@ -233,7 +233,7 @@ fn get_user_move() -> Result<Move, &'static str> {
 
         match io::stdin().read_line(&mut uinput) {
             Err(_) => {
-                let msg: &'static str = "Failed to get user input. ";
+                let msg: &'static str = "Failed to get user input.";
                 return Err(msg);
             }
             Ok(_) => match uinput.chars().nth(0) {
@@ -258,7 +258,7 @@ fn get_user_move() -> Result<Move, &'static str> {
                     break 'inputloop;
                 }
                 Some(other) => {
-                    println!("Invalid input: {}. Valid inputs are w-a-s-d and q. ", other);
+                    println!("Invalid input: {}. Valid inputs are w-a-s-d and q.", other);
                     thread::sleep(Duration::from_secs(1));
                 }
                 _ => {
@@ -278,7 +278,7 @@ fn gen_rand_cell(field: &mut Vec<usize>) -> Result<(), &'static str> {
 
         match field.get_mut(idx) {
             None => {
-                return Err("Index out of range. ");
+                return Err("Index out of range.");
             }
             Some(cell) => {
                 if *cell == 0 {

@@ -4,21 +4,19 @@ defmodule Twenty48 do
 
   def play, do: setup() |> play
 
-  defp play(field) do
-    Map.put_new(field, :score, 0)
-    show(field)
+  defp play(board, score \\ 0) do
+    show(board, score)
 
-    # cond do
-    #   0 in Map.values(field) or combinable?(field) ->
-    #     moved = move(field, input())
-    #     if moved == field, do: play(field), else: add_tile(moved) |> play
+    cond do
+      0 in Map.values(board) or combinable?(board) ->
+        {moved, score} = move(board, score, input(board, score))
+        if moved == board, do: play(board, score), else: add_tile(moved) |> play(score)
 
-    #   true ->
-    #     IO.puts("Game Over")
-    #     score = Map.get(field, :score, 0)
-    #     IO.puts("Final Score: #{score}")
-    #     exit(:normal)
-    # end
+      true ->
+        IO.puts("Game Over!")
+        IO.puts("Final Score: #{score}")
+        exit(:normal)
+    end
   end
 
   defp setup do
@@ -27,79 +25,134 @@ defmodule Twenty48 do
     |> add_tile
   end
 
-  defp add_tile(field) do
-    position = blank_space(field) |> Enum.random()
+  defp add_tile(board) do
+    position = blank_space(board) |> Enum.random()
     tile = if :rand.uniform(10) == 1, do: 4, else: 2
-    %{field | position => tile}
+    %{board | position => tile}
   end
 
-  defp blank_space(field) do
-    for {key, 0} <- field, do: key
+  defp blank_space(board) do
+    for {key, 0} <- board, do: key
   end
 
-  defp input do
+  defp input(board, score) do
     uinput = IO.gets("")
 
     case String.first(uinput) do
-      "w" -> :up
-      "a" -> :left
-      "s" -> :down
-      "d" -> :right
-      "q" -> exit(:normal)
-      _ -> input()
+      "w" ->
+        :up
+
+      "a" ->
+        :left
+
+      "s" ->
+        :down
+
+      "d" ->
+        :right
+
+      "q" ->
+        IO.puts("Game Over!")
+        IO.puts("Final Score: #{score}")
+        exit(:normal)
+
+      x ->
+        IO.puts("Invalid input: #{x}. Valid inputs are w-a-s-d and q.")
+        input(board, score)
     end
   end
 
-  defp move(field, :up) do
-    Enum.reduce(@range, field, fn cidx, acc ->
+  defp move(board, score, :up) do
+    Enum.reduce(@range, {board, score}, fn cidx, {acc, score} ->
       Enum.map(@range, fn ridx -> acc[{ridx, cidx}] end)
-      |> then(fn tiles -> move_and_combine(field, tiles) end)
-      |> Enum.with_index()
-      |> Enum.reduce(acc, fn {v, ridx}, map -> Map.put(map, {ridx, cidx}, v) end)
+      |> move_and_combine(score)
+      |> then(fn {v, score} ->
+        {v
+         |> Enum.with_index()
+         |> Enum.reduce(acc, fn {v, ridx}, map -> Map.put(map, {ridx, cidx}, v) end), score}
+      end)
     end)
   end
 
-  defp move_and_combine(field, tiles) do
+  defp move(board, score, :left) do
+    Enum.reduce(@range, {board, score}, fn ridx, {acc, score} ->
+      Enum.map(@range, fn cidx -> acc[{ridx, cidx}] end)
+      |> move_and_combine(score)
+      |> then(fn {v, score} ->
+        {v
+         |> Enum.with_index()
+         |> Enum.reduce(acc, fn {v, cidx}, map -> Map.put(map, {ridx, cidx}, v) end), score}
+      end)
+    end)
+  end
+
+  defp move(board, score, :down) do
+    Enum.reduce(@range, {board, score}, fn cidx, {acc, score} ->
+      Enum.map((@size - 1)..0, fn ridx -> acc[{ridx, cidx}] end)
+      |> move_and_combine(score)
+      |> then(fn {v, score} ->
+        {v
+         |> Enum.reverse()
+         |> Enum.with_index()
+         |> Enum.reduce(acc, fn {v, ridx}, map -> Map.put(map, {ridx, cidx}, v) end), score}
+      end)
+    end)
+  end
+
+  defp move(board, score, :right) do
+    Enum.reduce(@range, {board, score}, fn ridx, {acc, score} ->
+      Enum.map((@size - 1)..0, fn cidx -> acc[{ridx, cidx}] end)
+      |> move_and_combine(score)
+      |> then(fn {v, score} ->
+        {v
+         |> Enum.reverse()
+         |> Enum.with_index()
+         |> Enum.reduce(acc, fn {v, cidx}, map -> Map.put(map, {ridx, cidx}, v) end), score}
+      end)
+    end)
+  end
+
+  defp move_and_combine(tiles, score) do
     (Enum.filter(tiles, &(&1 > 0)) ++ [0, 0, 0, 0])
     |> Enum.take(@size)
     |> case do
       [a, a, b, b] ->
-        Map.update!(field, :score, fn v -> v + a * 2 + b * 2 end)
-        [a * 2, b * 2, 0, 0]
+        score = score + a * 2 + b * 2
+        {[a * 2, b * 2, 0, 0], score}
 
       [a, a, b, c] ->
-        Map.update!(field, :score, fn v -> v + a * 2 end)
-        [a * 2, b, c, 0]
+        score = score + a * 2
+        {[a * 2, b, c, 0], score}
 
       [a, b, b, c] ->
-        Map.update!(field, :score, fn v -> v + b * 2 end)
-        [a, b * 2, c, 0]
+        score = score + b * 2
+        {[a, b * 2, c, 0], score}
 
       [a, b, c, c] ->
-        Map.update!(field, :score, fn v -> v + c * 2 end)
-        [a, b, c * 2, 0]
+        score = score + c * 2
+        {[a, b, c * 2, 0], score}
 
       x ->
-        x
+        {x, score}
     end
   end
 
-  defp combinable?(field) do
+  defp combinable?(board) do
     Enum.any?(
       for ridx <- @range,
           cidx <- 0..(@size - 2),
-          do: field[{cidx, ridx}] == field[{cidx, ridx + 1}]
+          do: board[{cidx, ridx}] == board[{cidx, ridx + 1}]
     ) or
       Enum.any?(
         for ridx <- @range,
             cidx <- 0..(@size - 2),
-            do: field[{cidx, ridx}] == field[{cidx + 1, ridx}]
+            do: board[{cidx, ridx}] == board[{cidx + 1, ridx}]
       )
   end
 
-  defp print_board(field) do
+  defp print_board(board) do
     width =
-      field
+      board
       |> Enum.map(fn {_, v} -> v end)
       |> Enum.max()
       |> to_string
@@ -112,7 +165,7 @@ defmodule Twenty48 do
     Enum.each(0..(@size - 2), fn ridx ->
       row =
         Enum.reduce(@range, "", fn cidx, row ->
-          cell = field[{ridx, cidx}]
+          cell = board[{ridx, cidx}]
 
           size =
             cell
@@ -126,11 +179,14 @@ defmodule Twenty48 do
           right_ws = String.duplicate(" ", right_ws_size)
           left_ws = String.duplicate(" ", left_ws_size)
 
-          if cell == 0 do
-            row = row <> " #{left_ws} #{right_ws} │"
-          else
-            row = row <> " #{left_ws}#{cell}#{right_ws} │"
-          end
+          row =
+            if cell == 0 do
+              row <> " #{left_ws} #{right_ws} │"
+            else
+              row <> " #{left_ws}#{cell}#{right_ws} │"
+            end
+
+          row
         end)
 
       IO.puts("│" <> row)
@@ -139,7 +195,7 @@ defmodule Twenty48 do
 
     row =
       Enum.reduce(@range, "", fn cidx, row ->
-        cell = field[{@size - 1, cidx}]
+        cell = board[{@size - 1, cidx}]
 
         size =
           cell
@@ -153,21 +209,22 @@ defmodule Twenty48 do
         right_ws = String.duplicate(" ", right_ws_size)
         left_ws = String.duplicate(" ", left_ws_size)
 
-        if cell == 0 do
-          row = row <> " #{left_ws} #{right_ws} │"
-        else
-          row = row <> " #{left_ws}#{cell}#{right_ws} │"
-        end
+        row =
+          if cell == 0 do
+            row <> " #{left_ws} #{right_ws} │"
+          else
+            row <> " #{left_ws}#{cell}#{right_ws} │"
+          end
+
+        row
       end)
 
     IO.puts("│" <> row)
     IO.puts("└#{spacing}┴#{spacing}┴#{spacing}┴#{spacing}┘")
   end
 
-  def show(field, verbose \\ false) do
+  def show(board, score, verbose \\ false) do
     IEx.Helpers.clear()
-
-    score = Map.get(field, :score, 0)
 
     IO.puts("2048")
 
@@ -185,7 +242,7 @@ defmodule Twenty48 do
       IO.puts("Score #{score}\n")
     end
 
-    print_board(field)
+    print_board(board)
   end
 end
 
